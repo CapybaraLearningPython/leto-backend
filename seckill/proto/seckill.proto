@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+/*
+Overview: 
+1. GetSeckillDetail: GetSeckillDetailRequest -> GetSeckillDetailResponse
+2. GetSeckillList: GetSeckillListRequest -> GetSeckillListResponse
+3. GetOrderList: GetOrderListRequest -> GetOrderListResponse
+4. CreateOrder: CreateOrderRequest -> CreateOrderResponse
+5. MakePayment: MakePaymentRequest -> MakePaymentResponse
+6. PostPaymentResult: PostPaymentResultRequest -> PostPaymentResultResponse
+*/
+
+// Services
+service SeckillService {
+    rpc GetSeckillDetail(GetSeckillDetailRequest) returns (GetSeckillDetailResponse);
+    rpc GetSeckillList(GetSeckillListRequest) returns (GetSeckillListResponse);
+    rpc GetOrderList(GetOrderListRequest) returns (GetOrderListResponse);
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+    rpc MakePayment(MakePaymentRequest) returns (MakePaymentResponse);
+    rpc PostPaymentResult(PostPaymentResultRequest) returns (PostPaymentResultResponse);
+}
+
+// Requests
+message GetSeckillListRequest {
+    uint32 page = 1;
+    uint32 size = 2;
+}
+
+message GetSeckillDetailRequest {
+    uint64 id = 1;
+}
+
+message GetOrderListRequest {
+    uint32 page = 1;
+    uint32 size = 2;
+}
+
+message CreateOrderRequest {
+    uint32 quantity = 1;
+    uint64 seckill_id = 2;
+    string address = 3;
+}
+
+message MakePaymentRequest {
+    uint64 id = 1;
+}
+
+message PostPaymentResultRequest {
+    string result = 1;
+}
+
+
+// Responses
+message Product {
+    uint64 id = 1;
+    string title = 2;
+    uint64 price = 3;
+    string covers = 4;
+    string detail = 5;
+    string created_at = 6;
+}
+
+message Seckill {
+    uint64 id = 1;
+    uint64 seckill_price = 2;
+    string starts_at = 3;
+    string ends_at = 4;
+    string created_at = 5;
+    uint32 stock = 6;
+    uint32 max_per_buyer = 7;
+    Product product = 8;
+}
+
+message Order {
+    uint64 id = 1;
+    uint32 quantity = 2;
+    uint64 amount = 3;
+    uint32 status = 4;
+    string created_at = 5;
+    Seckill seckill = 6;
+    string address = 7;
+}
+
+message GetSeckillDetailResponse {
+    Seckill seckill = 1;
+}
+
+message GetSeckillListResponse {
+    repeated Seckill seckills = 1;
+}
+
+message GetOrderListResponse {
+    repeated Order orders = 1;
+}
+
+message CreateOrderResponse {
+    string status = 1;
+}
+
+message MakePaymentResponse {
+    string order_str = 2;
+}
+
+message PostPaymentResultResponse {
+    string client_response = 1;
+}

@@ -1,0 +1,179 @@
+from proto import seckill_pb2, seckill_pb2_grpc
+from sqlalchemy import select
+from models.seckill import Seckill, Order, OrderStatusEnum
+from grpc import StatusCode
+from confluent_kafka import Producer
+import settings
+import json
+from utils.cache import redis_client
+from utils.broker_callback import delivery_report
+from urllib.parse import parse_qs
+from utils.alipay import alipay_client
+from sqlalchemy.orm import selectinload
+from utils.nested_response_generator import response_handler
+
+producer = Producer({"bootstrap.servers": settings.KAFKA_BROKER_SERVER})
+
+
+class SeckillServicer(seckill_pb2_grpc.SeckillServiceServicer):
+
+    async def GetSeckillDetail(
+        self, request: seckill_pb2.GetSeckillDetailRequest, context, session
+    ):
+        id = request.id
+        async with session.begin():
+            seckill_result = await session.execute(
+                select(Seckill).where(Seckill.id == id)
+            )
+            seckill = seckill_result.scalar()
+            if not seckill:
+                await context.abort(
+                    code=StatusCode.NOT_FOUND,
+                    details="获取秒杀详情失败：找不到该秒杀！",
+                )
+            response = response_handler.generate_seckill_detail_response(seckill)
+            return response
+
+    async def GetSeckillList(
+        self, request: seckill_pb2.GetSeckillListRequest, context, session
+    ):
+        page = request.page or 1
+        size = request.size or 10
+        offset = (page - 1) * size
+        async with session.begin():
+            seckill_results = await session.execute(
+                select(Seckill).limit(size).offset(offset)
+            )
+            seckill_objs = seckill_results.scalars().all()
+
+            response = response_handler.generate_seckill_list_response(seckill_objs)
+            return response
+
+    async def GetOrderList(
+        self, request: seckill_pb2.GetOrderListRequest, context, session, user_id
+    ):
+        page = request.page or 1
+        size = request.size or 10
+        offset = (page - 1) * size
+        async with session.begin():
+            order_results = await session.execute(
+                select(Order)
+                .where(Order.user_id == user_id)
+                .options(selectinload(Order.seckill).selectinload(Seckill.product))
+                .limit(size)
+                .offset(offset)
+            )
+            order_objs = order_results.scalars().all()
+            response = response_handler.generate_order_list_response(order_objs)
+            return response
+
+    async def CreateOrder(
+        self, request: seckill_pb2.CreateOrderRequest, context, session, user_id
+    ):
+        quantity = request.quantity
+        seckill_id = request.seckill_id
+        address = request.address
+
+        seckill_key = redis_client.SECKILL_KEY
+        seckill = await redis_client.get_dict(seckill_key.format(seckill_id))
+        if not seckill:
+            await context.abort(
+                code=StatusCode.NOT_FOUND, details="创建订单失败：秒杀不存在！"
+            )
+        # Redis预扣库存
+        result = await redis_client.decrease_stock(seckill, quantity, user_id)
+        failure_mapper = {
+            -1: "购买数量超过每人限购",
+            -2: "购买数量超过库存",
+            -3: "库存已空或库存数量格式不对",
+            -4: "重复下单",
+            -5: "秒杀已结束",
+            -6: "内部错误",
+        }
+        if result in failure_mapper:
+            await context.abort(
+                code=StatusCode.PERMISSION_DENIED,
+                details=f"预扣库存失败：{failure_mapper[result]}",
+            )
+
+        # 发送至Broker
+        message_dict = dict(
+            quantity=quantity,
+            seckill_id=seckill_id,
+            address=address,
+            user_id=user_id,
+        )
+        message = json.dumps(message_dict).encode("utf-8")
+        try:
+            producer.produce(
+                topic="seckill",
+                value=message,
+                key=str(seckill_id),
+                callback=delivery_report,
+            )
+            producer.poll(0)
+        except Exception as e:
+            try:
+                await redis_client.rollback(seckill_id, quantity, user_id)
+                await context.abort(
+                    code=StatusCode.INTERNAL,
+                    details=f"写入Broker失败，Redis已回滚：{str(e)}",
+                )
+            except Exception as re:
+                await context.abort(
+                    code=StatusCode.INTERNAL,
+                    details=f"写入Broker失败，Redis回滚失败：{str(re)}",
+                )
+
+        response = seckill_pb2.CreateOrderResponse(status="订单请求已提交！")
+        return response
+
+    async def MakePayment(
+        self, request: seckill_pb2.MakePaymentRequest, context, session, user_id
+    ):
+        seckill_id = request.id
+        order_str = await redis_client.get_order_str(user_id, seckill_id)
+
+        if not order_str:
+            response = seckill_pb2.MakePaymentResponse(order_str="pending")
+
+        print("order_str", order_str)
+
+        response = seckill_pb2.MakePaymentResponse(order_str=order_str)
+        return response
+
+    async def PostPaymentResult(
+        self, request: seckill_pb2.PostPaymentResultRequest, context, session
+    ):
+        raw_data = request.result
+        result = json.loads(raw_data)
+        sign = result.pop("sign")
+
+        is_valid = await alipay_client.verify(result, sign)
+        if not is_valid:
+            await context.abort(
+                code=StatusCode.PERMISSION_DENIED,
+                details="支付结果校验失败：支付宝验签异常！",
+            )
+        order_id = result.get("out_trade_no")
+        order_str = result.get("trade_no")
+        status = result.get("trade_status")
+
+        async with session.begin():
+            order_result = await session.execute(
+                select(Order).where(Order.id == order_id)
+            )
+            order = order_result.scalar()
+            if not order:
+                await context.abort(
+                    code=StatusCode.PERMISSION_DENIED,
+                    details="支付结果校验失败：订单不存在！",
+                )
+            order.order_str = order_str
+            if status == "WAIT_BUYER_PAY":
+                order.status = OrderStatusEnum.PENDING_PAYMENT.value
+            else:
+                order.status = OrderStatusEnum.PAID.value
+
+        response = seckill_pb2.PostPaymentResultResponse(client_response="success")
+        return response

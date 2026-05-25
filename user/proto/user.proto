@@ -1,0 +1,82 @@
+syntax = "proto3";
+
+/*
+Overview: 
+1. CreateAddress: CreateAddressRequest -> AddressInfoResponse
+2. UpdateAddress: UpdateAddressRequest -> AddressInfoResponse
+3. GetAddressList: GetAddressListRequest -> AddressListResponse
+4. DeleteAddress: DeleteAddressRequest -> Empty
+5. UpdateAvatar: UpdateAvatarRequest -> UpdateAvatarResponse
+*/
+
+import "google/protobuf/empty.proto";
+
+// Services
+service UserService {
+    rpc CreateAddress(CreateAddressRequest) returns (AddressInfoResponse);
+    rpc UpdateAddress(UpdateAddressRequest) returns (AddressInfoResponse);
+    rpc GetAddressList(GetAddressListRequest) returns (AddressListResponse);
+    rpc DeleteAddress(DeleteAddressRequest) returns (google.protobuf.Empty);
+    rpc UpdateAvatar(UpdateAvatarRequest) returns (UpdateAvatarResponse);
+    rpc UploadAvatar(UploadAvatarRequest) returns (AvatarInfoResponse);
+    rpc GetAvatarDetail(google.protobuf.Empty) returns (AvatarInfoResponse);
+}
+
+// Requests
+message CreateAddressRequest {
+    string name = 1;
+    string tel = 2;
+    string region = 3;
+    string detail = 4;
+}
+
+message UpdateAddressRequest {
+    uint64 id = 1;
+    string name = 2;
+    string tel = 3;
+    string region = 4;
+    string detail = 5;
+}
+
+message GetAddressListRequest {
+    uint32 page = 1;
+    uint32 size = 2;
+}
+
+message DeleteAddressRequest {
+    uint64 id = 1;
+}
+
+message UpdateAvatarRequest {
+    string file_name = 1;
+    string content_type = 2;
+}
+
+message UploadAvatarRequest {
+    string file_url = 1;
+}
+
+// Responses
+message AddressInfoResponse {
+    string name = 1;
+    string tel = 2;
+    string region = 3;
+    string detail = 4;
+    uint64 id = 5;
+}
+
+message AddressListResponse {
+    repeated AddressInfoResponse addresses = 1;
+}
+
+message UpdateAvatarResponse {
+    string presigned_url = 1;
+    string file_url = 2;
+    map<string, string> signed_headers = 3;
+}
+
+message AvatarInfoResponse {
+    string url = 1;
+    uint64 user_id = 2;
+    uint64 id = 3;
+}
