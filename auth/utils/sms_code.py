@@ -20,9 +20,9 @@ class SendCode(metaclass=SingletonMeta):
     @staticmethod
     def _create_client() -> Dypnsapi20170525Client:
         config = open_api_models.Config(
-            access_key_id="ALIYUN_ACCESS_KEY_ID_REMOVED",
-            access_key_secret="ALIYUN_ACCESS_KEY_SECRET_REMOVED",
-            endpoint="dypnsapi.aliyuncs.com",
+            access_key_id="",
+            access_key_secret="",
+            endpoint="",
         )
         return Dypnsapi20170525Client(config)
 
@@ -57,8 +57,8 @@ class VerifyCode(metaclass=SingletonMeta):
     def _create_client() -> Dypnsapi20170525Client:
         config = open_api_models.Config(
             access_key_id=" ",
-            access_key_secret="ALIYUN_ACCESS_KEY_SECRET_REMOVED",
-            endpoint="dypnsapi.aliyuncs.com",
+            access_key_secret="",
+            endpoint="",
         )
         return Dypnsapi20170525Client(config)
 
