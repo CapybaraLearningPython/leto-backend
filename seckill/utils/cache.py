@@ -4,7 +4,9 @@ from models.seckill import Seckill
 from models.seckill import Order
 import json
 from datetime import datetime
-
+import asyncio
+from models import AsyncSession
+from sqlalchemy import select
 
 class LetoRedis(metaclass=SingletonMeta):
 
@@ -13,6 +15,8 @@ class LetoRedis(metaclass=SingletonMeta):
     SECKILL_STOCK_KEY = "seckill_stock_{}"
     SECKILL_ORDER_LOCK_KEY = "order_lock_{user_id}_{seckill_id}"
     SECKILL_ORDER_STR_KEY = "seckill_order_str_{user_id}_{seckill_id}"
+    STOCK_REBUILD_KEY = "stock_rebuild_lock_{seckill_id}"
+    DETAIL_REBUILD_KEY = "detail_rebuild_lock_{seckill_id}"
 
     def __init__(self):
         self.client = redis.Redis(host="localhost", port=6379, db=0)
@@ -34,6 +38,48 @@ class LetoRedis(metaclass=SingletonMeta):
         if not value:
             return None
         return json.loads(value)
+
+    async def get_seckill_detail(self, seckill_id: str, session: AsyncSession):
+        seckill_key = self.SECKILL_KEY.format(seckill_id)
+        detail = await self.get_dict(seckill_key)
+        if detail:
+            return detail
+
+        rebuild_key = self.DETAIL_REBUILD_KEY.format(seckill_id)
+        got_lock = await self.client.set(rebuild_key, 1, nx=True, ex=5)
+        if got_lock:
+            try:
+                detail = await self.get_dict(seckill_key)
+                if detail:
+                    return detail
+                async with session.begin():
+                    seckill = await session.scalar(
+                        select(Seckill).where(Seckill.id == seckill_id)
+                    )
+                if not seckill:
+                    return None
+                ex = int((seckill.ends_at - datetime.now()).total_seconds())
+                detail = {
+                    "id": seckill.id,
+                    "seckill_price": str(seckill.seckill_price),
+                    "starts_at": seckill.starts_at.isoformat(),
+                    "ends_at": seckill.ends_at.isoformat(),
+                    "created_at": seckill.created_at.isoformat(),
+                    "stock": seckill.stock,
+                    "max_per_buyer": seckill.max_per_buyer,
+                }
+                if ex > 0:
+                    await self.client.set(seckill_key, json.dumps(detail), ex = ex)
+
+                return detail
+
+            finally:
+                await self.client.delete(rebuild_key)
+
+        else:
+            await asyncio.sleep(0.05)
+            return await self.get_seckill_detail(seckill_id, session)
+
 
     async def delete(self, key):
         await self.client.delete(key)
@@ -57,11 +103,41 @@ class LetoRedis(metaclass=SingletonMeta):
         key = self.SECKILL_STOCK_KEY.format(seckill_id)
         return await self.get(key)
 
+    async def _ensure_stock_key(self, seckill: dict):
+        ends_at = datetime.fromisoformat(seckill["ends_at"])
+        now = datetime.now()
+        if ends_at <= now:
+            return
+
+        stock_key = self.SECKILL_STOCK_KEY.format(seckill["id"])
+        exists = await self.get_stock(seckill["id"])
+        if exists:
+            return
+
+        rebuild_key = self.STOCK_REBUILD_KEY.format(seckill["id"])
+        got_lock = await self.client.set(rebuild_key, 1, nx=True, ex=5)
+
+        if got_lock:
+            try:
+                exists = await self.get_stock(seckill["id"])
+                if exists:
+                    return
+
+                ex = int((ends_at - now).total_seconds())
+                await self.client.set(stock_key, seckill["stock"], ex=ex)
+            finally:
+                await self.client.delete(rebuild_key)
+
+        else:
+            await asyncio.sleep(0.05)
+            await self._ensure_stock_key(seckill)
+
     async def decrease_stock(self, seckill: dict, quantity: int, user_id: int):
         lock_key = self.SECKILL_ORDER_LOCK_KEY.format(
             user_id=user_id, seckill_id=seckill["id"]
         )
         stock_key = self.SECKILL_STOCK_KEY.format(seckill["id"])
+        await self._ensure_stock_key(seckill)
 
         # 原子扣减库存并防止重复下单
         lua = """
