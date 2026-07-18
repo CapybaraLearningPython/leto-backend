@@ -44,13 +44,15 @@ class LetoRedis(metaclass=SingletonMeta):
         detail = await self.get_dict(seckill_key)
         if detail:
             return detail
-
+        print("detail缓存：缓存未命中，尝试重建……")
         rebuild_key = self.DETAIL_REBUILD_KEY.format(seckill_id)
         got_lock = await self.client.set(rebuild_key, 1, nx=True, ex=5)
         if got_lock:
+            print("detail缓存：抢锁成功，重建中……")
             try:
                 detail = await self.get_dict(seckill_key)
                 if detail:
+                    print("detail缓存：第二次检查缓存命中，其他请求已完成重建！")
                     return detail
                 async with session.begin():
                     seckill = await session.scalar(
@@ -71,12 +73,14 @@ class LetoRedis(metaclass=SingletonMeta):
                 if ex > 0:
                     await self.client.set(seckill_key, json.dumps(detail), ex = ex)
 
+                print("detail缓存：重建成功！")
                 return detail
 
             finally:
                 await self.client.delete(rebuild_key)
 
         else:
+            print("detail缓存：未抢到锁，等待重试……")
             await asyncio.sleep(0.05)
             return await self.get_seckill_detail(seckill_id, session)
 
@@ -114,21 +118,26 @@ class LetoRedis(metaclass=SingletonMeta):
         if exists:
             return
 
+        print("stock缓存：缓存未命中，尝试重建……")
+
         rebuild_key = self.STOCK_REBUILD_KEY.format(seckill["id"])
         got_lock = await self.client.set(rebuild_key, 1, nx=True, ex=5)
 
         if got_lock:
+            print("stock缓存：抢锁成功，重建中……")
             try:
                 exists = await self.get_stock(seckill["id"])
                 if exists:
+                    print("stock缓存：第二次检查缓存命中，其他请求已完成重建！")
                     return
 
                 ex = int((ends_at - now).total_seconds())
                 await self.client.set(stock_key, seckill["stock"], ex=ex)
+                print("stock缓存：重建成功！")
             finally:
                 await self.client.delete(rebuild_key)
-
         else:
+            print("stock缓存：未抢到锁，等待重试……")
             await asyncio.sleep(0.05)
             await self._ensure_stock_key(seckill)
 
