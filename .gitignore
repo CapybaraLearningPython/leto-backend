@@ -15,4 +15,4 @@ __pycache__/
 # system
 .DS_Store
 .idea/
-.vscode/
+.auth/utils/sms_code.py

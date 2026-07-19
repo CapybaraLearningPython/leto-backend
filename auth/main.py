@@ -10,7 +10,7 @@ from utils.consul_client import consul_client
 
 async def main():
     server = grpc.aio.server(interceptors=[AuthInterceptor()])
-    server.add_insecure_port(f"0.0.0.0:{consul_client.port}")
+    server.add_insecure_port(f"127.0.0.1:{consul_client.port}")
 
     auth_pb2_grpc.add_AuthServiceServicer_to_server(AuthServicer(), server)
 

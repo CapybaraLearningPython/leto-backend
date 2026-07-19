@@ -10,7 +10,7 @@ from utils.cache import redis_client
 
 consumer = Consumer(
     {
-        "bootstrap.servers": "192.168.10.110:9092",
+        "bootstrap.servers": "127.0.0.1:9092",
         "group.id": "seckill_group",
         "auto.offset.reset": "earliest",
         "enable.auto.commit": False,

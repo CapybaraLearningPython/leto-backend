@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-%sfmophxszqesemfydgnh%t!^t-b9o)wd+jqgmzke$n7bf%j#^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.10.229"]
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 
 # Application definition
@@ -81,8 +81,8 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "leto_seckill_db",
         "USER": "root",
-        "PASSWORD": "12345678",
-        "HOST": "localhost",
+        "PASSWORD": "Leto2026Deploy#",
+        "HOST": "127.0.0.1",
         "PORT": 3306,
     }
 }
@@ -142,5 +142,5 @@ REST_FRAMEWORK = {
 
 # Consul client
 SERVICE_NAME = "admin_service"
-CONSUL_HOST = "192.168.10.110"
+CONSUL_HOST = "127.0.0.1"
 CONSUL_PORT = 8500

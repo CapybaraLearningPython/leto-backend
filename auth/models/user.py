@@ -17,7 +17,7 @@ def generate_username():
 class User(Base, SerializerMixin):
     __tablename__ = 'user'
 
-    id = Column(BigInteger, primary_key=True, default=generate_username)
+    id = Column(BigInteger, primary_key=True, default=generate_id)
     tel = Column(String(20), unique=True, index=True)
     username = Column(String(20), default='乐购星人')
     avatar = Column(String(200))

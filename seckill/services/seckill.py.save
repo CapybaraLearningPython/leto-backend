@@ -74,7 +74,8 @@ class SeckillServicer(seckill_pb2_grpc.SeckillServiceServicer):
         seckill_id = request.seckill_id
         address = request.address
 
-        seckill = await redis_client.get_seckill_detail(seckill_id)
+        seckill_key = redis_client.SECKILL_KEY
+        seckill = await redis_client.get_seckill_detail(seckill_id, session)
         if not seckill:
             await context.abort(
                 code=StatusCode.NOT_FOUND, details="创建订单失败：秒杀不存在！"

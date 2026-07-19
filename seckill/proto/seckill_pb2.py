@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rseckill.proto\"3\n\x15GetSeckillListRequest\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x0c\n\x04size\x18\x02 \x01(\r\"%\n\x17GetSeckillDetailRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"1\n\x13GetOrderListRequest\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x0c\n\x04size\x18\x02 \x01(\r\"K\n\x12\x43reateOrderRequest\x12\x10\n\x08quantity\x18\x01 \x01(\r\x12\x12\n\nseckill_id\x18\x02 \x01(\x04\x12\x0f\n\x07\x61\x64\x64ress\x18\x03 \x01(\t\" \n\x12MakePaymentRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"*\n\x18PostPaymentResultRequest\x12\x0e\n\x06result\x18\x01 \x01(\t\"g\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\x04\x12\r\n\x05title\x18\x02 \x01(\t\x12\r\n\x05price\x18\x03 \x01(\x04\x12\x0e\n\x06\x63overs\x18\x04 \x01(\t\x12\x0e\n\x06\x64\x65tail\x18\x05 \x01(\t\x12\x12\n\ncreated_at\x18\x06 \x01(\t\"\xa5\x01\n\x07Seckill\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x15\n\rseckill_price\x18\x02 \x01(\x04\x12\x11\n\tstarts_at\x18\x03 \x01(\t\x12\x0f\n\x07\x65nds_at\x18\x04 \x01(\t\x12\x12\n\ncreated_at\x18\x05 \x01(\t\x12\r\n\x05stock\x18\x06 \x01(\r\x12\x15\n\rmax_per_buyer\x18\x07 \x01(\r\x12\x19\n\x07product\x18\x08 \x01(\x0b\x32\x08.Product\"\x85\x01\n\x05Order\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x10\n\x08quantity\x18\x02 \x01(\r\x12\x0e\n\x06\x61mount\x18\x03 \x01(\x04\x12\x0e\n\x06status\x18\x04 \x01(\r\x12\x12\n\ncreated_at\x18\x05 \x01(\t\x12\x19\n\x07seckill\x18\x06 \x01(\x0b\x32\x08.Seckill\x12\x0f\n\x07\x61\x64\x64ress\x18\x07 \x01(\t\"5\n\x18GetSeckillDetailResponse\x12\x19\n\x07seckill\x18\x01 \x01(\x0b\x32\x08.Seckill\"4\n\x16GetSeckillListResponse\x12\x1a\n\x08seckills\x18\x01 \x03(\x0b\x32\x08.Seckill\".\n\x14GetOrderListResponse\x12\x16\n\x06orders\x18\x01 \x03(\x0b\x32\x06.Order\"%\n\x13\x43reateOrderResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"(\n\x13MakePaymentResponse\x12\x11\n\torder_str\x18\x02 \x01(\t\"4\n\x19PostPaymentResultResponse\x12\x17\n\x0f\x63lient_response\x18\x01 \x01(\t2\x99\x03\n\x0eSeckillService\x12G\n\x10GetSeckillDetail\x12\x18.GetSeckillDetailRequest\x1a\x19.GetSeckillDetailResponse\x12\x41\n\x0eGetSeckillList\x12\x16.GetSeckillListRequest\x1a\x17.GetSeckillListResponse\x12;\n\x0cGetOrderList\x12\x14.GetOrderListRequest\x1a\x15.GetOrderListResponse\x12\x38\n\x0b\x43reateOrder\x12\x13.CreateOrderRequest\x1a\x14.CreateOrderResponse\x12\x38\n\x0bMakePayment\x12\x13.MakePaymentRequest\x1a\x14.MakePaymentResponse\x12J\n\x11PostPaymentResult\x12\x19.PostPaymentResultRequest\x1a\x1a.PostPaymentResultResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rseckill.proto\"3\n\x15GetSeckillListRequest\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x0c\n\x04size\x18\x02 \x01(\r\"%\n\x17GetSeckillDetailRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"1\n\x13GetOrderListRequest\x12\x0c\n\x04page\x18\x01 \x01(\r\x12\x0c\n\x04size\x18\x02 \x01(\r\"K\n\x12\x43reateOrderRequest\x12\x10\n\x08quantity\x18\x01 \x01(\r\x12\x12\n\nseckill_id\x18\x02 \x01(\x04\x12\x0f\n\x07\x61\x64\x64ress\x18\x03 \x01(\t\" \n\x12MakePaymentRequest\x12\n\n\x02id\x18\x01 \x01(\x04\"*\n\x18PostPaymentResultRequest\x12\x0e\n\x06result\x18\x01 \x01(\t\"g\n\x07Product\x12\n\n\x02id\x18\x01 \x01(\x04\x12\r\n\x05title\x18\x02 \x01(\t\x12\r\n\x05price\x18\x03 \x01(\x04\x12\x0e\n\x06\x63overs\x18\x04 \x01(\t\x12\x0e\n\x06\x64\x65tail\x18\x05 \x01(\t\x12\x12\n\ncreated_at\x18\x06 \x01(\t\"\xcb\x01\n\x07Seckill\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x15\n\rseckill_price\x18\x02 \x01(\x04\x12\x11\n\tstarts_at\x18\x03 \x01(\t\x12\x0f\n\x07\x65nds_at\x18\x04 \x01(\t\x12\x12\n\ncreated_at\x18\x05 \x01(\t\x12\x12\n\x05stock\x18\x06 \x01(\rH\x00\x88\x01\x01\x12\x1a\n\rmax_per_buyer\x18\x07 \x01(\rH\x01\x88\x01\x01\x12\x19\n\x07product\x18\x08 \x01(\x0b\x32\x08.ProductB\x08\n\x06_stockB\x10\n\x0e_max_per_buyer\"\xa7\x01\n\x05Order\x12\n\n\x02id\x18\x01 \x01(\x04\x12\x15\n\x08quantity\x18\x02 \x01(\rH\x00\x88\x01\x01\x12\x13\n\x06\x61mount\x18\x03 \x01(\x04H\x01\x88\x01\x01\x12\x0e\n\x06status\x18\x04 \x01(\r\x12\x12\n\ncreated_at\x18\x05 \x01(\t\x12\x19\n\x07seckill\x18\x06 \x01(\x0b\x32\x08.Seckill\x12\x0f\n\x07\x61\x64\x64ress\x18\x07 \x01(\tB\x0b\n\t_quantityB\t\n\x07_amount\"5\n\x18GetSeckillDetailResponse\x12\x19\n\x07seckill\x18\x01 \x01(\x0b\x32\x08.Seckill\"4\n\x16GetSeckillListResponse\x12\x1a\n\x08seckills\x18\x01 \x03(\x0b\x32\x08.Seckill\".\n\x14GetOrderListResponse\x12\x16\n\x06orders\x18\x01 \x03(\x0b\x32\x06.Order\"%\n\x13\x43reateOrderResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"(\n\x13MakePaymentResponse\x12\x11\n\torder_str\x18\x02 \x01(\t\"4\n\x19PostPaymentResultResponse\x12\x17\n\x0f\x63lient_response\x18\x01 \x01(\t2\x99\x03\n\x0eSeckillService\x12G\n\x10GetSeckillDetail\x12\x18.GetSeckillDetailRequest\x1a\x19.GetSeckillDetailResponse\x12\x41\n\x0eGetSeckillList\x12\x16.GetSeckillListRequest\x1a\x17.GetSeckillListResponse\x12;\n\x0cGetOrderList\x12\x14.GetOrderListRequest\x1a\x15.GetOrderListResponse\x12\x38\n\x0b\x43reateOrder\x12\x13.CreateOrderRequest\x1a\x14.CreateOrderResponse\x12\x38\n\x0bMakePayment\x12\x13.MakePaymentRequest\x1a\x14.MakePaymentResponse\x12J\n\x11PostPaymentResult\x12\x19.PostPaymentResultRequest\x1a\x1a.PostPaymentResultResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -46,21 +46,21 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PRODUCT']._serialized_start=315
   _globals['_PRODUCT']._serialized_end=418
   _globals['_SECKILL']._serialized_start=421
-  _globals['_SECKILL']._serialized_end=586
-  _globals['_ORDER']._serialized_start=589
-  _globals['_ORDER']._serialized_end=722
-  _globals['_GETSECKILLDETAILRESPONSE']._serialized_start=724
-  _globals['_GETSECKILLDETAILRESPONSE']._serialized_end=777
-  _globals['_GETSECKILLLISTRESPONSE']._serialized_start=779
-  _globals['_GETSECKILLLISTRESPONSE']._serialized_end=831
-  _globals['_GETORDERLISTRESPONSE']._serialized_start=833
-  _globals['_GETORDERLISTRESPONSE']._serialized_end=879
-  _globals['_CREATEORDERRESPONSE']._serialized_start=881
-  _globals['_CREATEORDERRESPONSE']._serialized_end=918
-  _globals['_MAKEPAYMENTRESPONSE']._serialized_start=920
-  _globals['_MAKEPAYMENTRESPONSE']._serialized_end=960
-  _globals['_POSTPAYMENTRESULTRESPONSE']._serialized_start=962
-  _globals['_POSTPAYMENTRESULTRESPONSE']._serialized_end=1014
-  _globals['_SECKILLSERVICE']._serialized_start=1017
-  _globals['_SECKILLSERVICE']._serialized_end=1426
+  _globals['_SECKILL']._serialized_end=624
+  _globals['_ORDER']._serialized_start=627
+  _globals['_ORDER']._serialized_end=794
+  _globals['_GETSECKILLDETAILRESPONSE']._serialized_start=796
+  _globals['_GETSECKILLDETAILRESPONSE']._serialized_end=849
+  _globals['_GETSECKILLLISTRESPONSE']._serialized_start=851
+  _globals['_GETSECKILLLISTRESPONSE']._serialized_end=903
+  _globals['_GETORDERLISTRESPONSE']._serialized_start=905
+  _globals['_GETORDERLISTRESPONSE']._serialized_end=951
+  _globals['_CREATEORDERRESPONSE']._serialized_start=953
+  _globals['_CREATEORDERRESPONSE']._serialized_end=990
+  _globals['_MAKEPAYMENTRESPONSE']._serialized_start=992
+  _globals['_MAKEPAYMENTRESPONSE']._serialized_end=1032
+  _globals['_POSTPAYMENTRESULTRESPONSE']._serialized_start=1034
+  _globals['_POSTPAYMENTRESULTRESPONSE']._serialized_end=1086
+  _globals['_SECKILLSERVICE']._serialized_start=1089
+  _globals['_SECKILLSERVICE']._serialized_end=1498
 # @@protoc_insertion_point(module_scope)
