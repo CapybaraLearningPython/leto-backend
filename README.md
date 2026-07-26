@@ -509,24 +509,3 @@ grep -a -c "stock缓存：重建成功" ~/logs/seckill.log
 
 > - **detail缓存尝试次数不等于未抢到锁的次数加上抢锁成功的次数的原因：** detail优化过逻辑，每次循环开头都会检查是否已经有缓存，如果有就会直接返回不会输出到日志；stock是通过递归进行循环，每次递归会完整走完流程，因此只要尝试重建则必会输出这次尝试的结果。
 > - **stock的尝试次数更大的原因：** detail的重建逻辑是每个请求第一次缓存未命中才输出日志，后续重试不会反复输出；stock的逻辑是递归循环，每次递归都会输出尝试重建的日志，所以次数更多。
-
-### 六、踩坑记录
-
-排查过程中发现并修复了以下问题，均已在最终版本中解决：
-
-| 问题 | 现象 | 原因 | 处理方式 |
-|---|---|---|---|
-| 新代码未接入业务流程 | 反复测试 print 从不触发 | `CreateOrder` 中仍调用旧的 `get_dict`，未切换到新写的 `get_seckill_detail` | 修改调用点，接入新方法 |
-| Key 格式化参数不匹配 | `KeyError: 'seckill_id'` | 常量模板用命名占位符 `{seckill_id}`，调用时用位置参数 `.format(seckill_id)` | 统一为位置参数风格 |
-| 漏 import | `NameError: name 'select' is not defined` | 复制代码时遗漏 `from sqlalchemy import select` | 补全 import |
-| 缩进丢失 | 方法调用报错但报错信息具有误导性 | 复制粘贴时方法体缩进丢失，脱离了类定义，变成模块级游离函数 | 用 `python3 -m py_compile` 校验语法后再部署 |
-| 漏写 return | 高并发下部分请求 log 全部为 0 | `if/else` 分支处理完写缓存逻辑后未 `return`，函数未正常退出，在循环中反复打转 | 补上统一的 `return detail` |
-| session 并发复用 | `sqlalchemy.exc.MissingGreenlet: greenlet_spawn has not been called` | 复用了从 gRPC 拦截器传入的长生命周期 `session`，跨越多次 `await asyncio.sleep` 后再执行数据库操作，触发异步上下文错误 | 改为在需要查库时用 `AsyncSessionFactory()` 现开独立 session，用完自动关闭 |
-| Protobuf 默认值省略 | 库存为 0 的活动在列表接口报 `Field required [type=missing]` | proto3 对数值类型字段，值等于默认值(0)时序列化时会被省略，Gateway 侧 Pydantic 模型严格校验该字段导致报错 | 涉及数值字段加 `optional` 关键字，重新生成 pb2 文件（seckill 与 gateway 两处均需生成，此前是两份独立的 pb2 副本导致遗漏同步） |
-| Git 历史泄露密钥 | GitHub push protection 拦截 push | 阿里云 AccessKey 曾以明文提交进 git 历史 | 先在阿里云控制台作废旧 key，再用 `git filter-repo --replace-text` 清理全部历史 commit，强推覆盖远程 |
-
-### 七、遗留事项
-
-1. **Redis 整体宕机场景**：本次防护仅覆盖"单个 key 意外丢失、Redis 服务本身可用"的场景。若 Redis 整体不可用，锁机制本身失效，需要应用层限流/熔断兜底，评估后暂不在本次范围内实现
-2. **DETAIL 缓存"抢锁成功"仍存在一定的空抢锁开销**：本次测试中每轮重试前已加入"先查缓存再抢锁"的优化，实际验证抢锁成功次数已精确收敛为 1，未观察到明显的重复抢锁问题
-3. **proto 文件存在于两个服务目录下、各自维护一份编译产物**：属于历史遗留的项目结构问题，建议后续将 proto 定义统一到共享目录，避免再次出现"改一处忘了改另一处"导致的编译产物不同步
